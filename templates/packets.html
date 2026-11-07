@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Packet Inspection &amp; Filtering{% endblock %}
+
+{% block content %}
+<div class="packets-container">
+
+    <!-- Filters & Query Panel -->
+    <section class="cyber-panel filter-panel">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-filter"></i> Packet Search &amp; Multi-Criteria Filters</h3>
+            <span class="badge-tech">SQLITE POWERED</span>
+        </div>
+
+        <form id="packetFilterForm" class="filter-form">
+            <div class="filter-grid">
+                <!-- Protocol Filter -->
+                <div class="filter-group">
+                    <label for="filterProtocol"><i class="fa-solid fa-tag"></i> Protocol:</label>
+                    <select id="filterProtocol" class="cyber-select">
+                        <option value="ALL">All Protocols</option>
+                        <option value="TCP">TCP</option>
+                        <option value="UDP">UDP</option>
+                        <option value="ICMP">ICMP</option>
+                        <option value="DNS">DNS</option>
+                        <option value="HTTP">HTTP</option>
+                        <option value="HTTPS/TLS">HTTPS / TLS</option>
+                        <option value="ARP">ARP</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+
+                <!-- Source IP Filter -->
+                <div class="filter-group">
+                    <label for="filterSrcIp"><i class="fa-solid fa-laptop"></i> Source IP:</label>
+                    <input type="text" id="filterSrcIp" class="cyber-input" placeholder="e.g. 192.168.1.1">
+                </div>
+
+                <!-- Destination IP Filter -->
+                <div class="filter-group">
+                    <label for="filterDstIp"><i class="fa-solid fa-server"></i> Destination IP:</label>
+                    <input type="text" id="filterDstIp" class="cyber-input" placeholder="e.g. 8.8.8.8">
+                </div>
+
+                <!-- Source Port Filter -->
+                <div class="filter-group">
+                    <label for="filterSrcPort"><i class="fa-solid fa-door-open"></i> Src Port:</label>
+                    <input type="number" id="filterSrcPort" class="cyber-input" placeholder="Port">
+                </div>
+
+                <!-- Destination Port Filter -->
+                <div class="filter-group">
+                    <label for="filterDstPort"><i class="fa-solid fa-door-closed"></i> Dst Port:</label>
+                    <input type="number" id="filterDstPort" class="cyber-input" placeholder="Port">
+                </div>
+
+                <!-- Min Packet Size -->
+                <div class="filter-group">
+                    <label for="filterMinSize"><i class="fa-solid fa-ruler-horizontal"></i> Min Size (B):</label>
+                    <input type="number" id="filterMinSize" class="cyber-input" placeholder="Min bytes">
+                </div>
+
+                <!-- Max Packet Size -->
+                <div class="filter-group">
+                    <label for="filterMaxSize"><i class="fa-solid fa-ruler-combined"></i> Max Size (B):</label>
+                    <input type="number" id="filterMaxSize" class="cyber-input" placeholder="Max bytes">
+                </div>
+
+                <!-- Page Size -->
+                <div class="filter-group">
+                    <label for="filterPageSize"><i class="fa-solid fa-list-ol"></i> Rows Per Page:</label>
+                    <select id="filterPageSize" class="cyber-select">
+                        <option value="25" selected>25 rows</option>
+                        <option value="50">50 rows</option>
+                        <option value="100">100 rows</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="filter-actions">
+                <button type="submit" class="cyber-btn btn-primary">
+                    <i class="fa-solid fa-magnifying-glass"></i> Apply Filters
+                </button>
+                <button type="button" id="btnResetFilters" class="cyber-btn btn-secondary">
+                    <i class="fa-solid fa-rotate-left"></i> Reset Filters
+                </button>
+                <button type="button" id="btnExportFilteredCsv" class="cyber-btn btn-export">
+                    <i class="fa-solid fa-download"></i> Export Filtered CSV
+                </button>
+                <span class="results-summary" id="resultsSummary">Showing 0 matching packets</span>
+            </div>
+        </form>
+    </section>
+
+    <!-- Detailed Packets Table -->
+    <section class="cyber-panel table-panel">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-database"></i> Captured Packet Database Records</h3>
+            <div class="pagination-header" id="paginationControlsTop"></div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="cyber-table" id="filteredPacketsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Timestamp</th>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Src Port</th>
+                        <th>Dst Port</th>
+                        <th>Protocol</th>
+                        <th>Length</th>
+                        <th>Summary Info</th>
+                    </tr>
+                </thead>
+                <tbody id="filteredPacketsBody">
+                    <tr class="empty-row">
+                        <td colspan="9">
+                            <div class="no-data">
+                                <i class="fa-solid fa-search"></i>
+                                <p>No packets found matching current criteria. Adjust filters or start capture on Dashboard.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom Pagination Bar -->
+        <div class="pagination-footer">
+            <div class="pagination-info" id="paginationInfo">Page 1 of 1</div>
+            <div class="pagination-buttons">
+                <button id="btnPrevPage" class="cyber-btn btn-sm btn-secondary" disabled>
+                    <i class="fa-solid fa-chevron-left"></i> Previous
+                </button>
+                <span id="currentPageBadge" class="page-badge">1</span>
+                <button id="btnNextPage" class="cyber-btn btn-sm btn-secondary" disabled>
+                    Next <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize packet search on page load
+    document.addEventListener("DOMContentLoaded", () => {
+        if (typeof initPacketsPage === "function") {
+            initPacketsPage();
+        }
+    });
+</script>
+{% endblock %}

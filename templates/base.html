@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Network Traffic Monitoring System{% endblock %} | Cybersecurity Dashboard</title>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Custom Cyber Dark Theme Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="cyber-theme">
+    <!-- Top Cyber Navigation Bar -->
+    <header class="cyber-header">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="system-title">NETSENTINEL</span>
+                    <span class="system-sub">TRAFFIC MONITORING SYSTEM</span>
+                </div>
+            </div>
+
+            <nav class="nav-links">
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard
+                </a>
+                <a href="{{ url_for('packets_view') }}" class="nav-link {% if active_page == 'packets' %}active{% endif %}">
+                    <i class="fa-solid fa-network-wired"></i> Live Packets
+                </a>
+                <a href="{{ url_for('reports_view') }}" class="nav-link {% if active_page == 'reports' %}active{% endif %}">
+                    <i class="fa-solid fa-file-shield"></i> Session Reports
+                </a>
+            </nav>
+
+            <div class="header-status">
+                <div id="statusIndicator" class="status-pill status-stopped">
+                    <span class="pulse-dot"></span>
+                    <span id="statusText">MONITORING IDLE</span>
+                </div>
+                <div class="clock-display" id="cyberClock">--:--:--</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Alert / Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="cyber-footer">
+        <div class="footer-container">
+            <span>Cybersecurity College Project &bull; Network Traffic Monitoring System</span>
+            <span>Powered by Python, Flask, Scapy, Psutil, Chart.js &amp; SQLite</span>
+        </div>
+    </footer>
+
+    <!-- Shared Application Scripts -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

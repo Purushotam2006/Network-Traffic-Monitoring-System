@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Session Reports &amp; Analytics{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+
+    <!-- Session Selection & Management -->
+    <section class="cyber-panel">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Monitoring Session History</h3>
+            <span class="badge-tech">HISTORICAL AUDIT</span>
+        </div>
+        <div class="session-selector-bar">
+            <div class="selector-field">
+                <label for="sessionSelect"><i class="fa-solid fa-folder-open"></i> Select Session:</label>
+                <select id="sessionSelect" class="cyber-select">
+                    <option value="">Loading recorded sessions...</option>
+                </select>
+            </div>
+            <div class="selector-actions">
+                <button id="btnLoadReport" class="cyber-btn btn-primary">
+                    <i class="fa-solid fa-file-chart-pie"></i> Load Session Analytics
+                </button>
+                <button id="btnDownloadSessionCsv" class="cyber-btn btn-export">
+                    <i class="fa-solid fa-file-csv"></i> Download Session CSV
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Session Summary Cards (Shown when session is loaded) -->
+    <div id="reportDetailsArea" class="hidden">
+        <section class="metrics-grid">
+            <div class="metric-card metric-primary">
+                <div class="metric-icon"><i class="fa-solid fa-hashtag"></i></div>
+                <div class="metric-info">
+                    <span class="metric-label">SESSION ID</span>
+                    <span class="metric-value" id="repSessionId">#1</span>
+                    <span class="metric-sub" id="repStatus">COMPLETED</span>
+                </div>
+            </div>
+
+            <div class="metric-card metric-tcp">
+                <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <div class="metric-info">
+                    <span class="metric-label">TOTAL PACKETS</span>
+                    <span class="metric-value" id="repTotalPackets">0</span>
+                    <span class="metric-sub" id="repAvgPacketSize">Avg: 0 B</span>
+                </div>
+            </div>
+
+            <div class="metric-card metric-speed-up">
+                <div class="metric-icon"><i class="fa-solid fa-hourglass-start"></i></div>
+                <div class="metric-info">
+                    <span class="metric-label">START TIME</span>
+                    <span class="metric-value font-sm" id="repStartTime">--</span>
+                    <span class="metric-sub" id="repInterface">Interface: --</span>
+                </div>
+            </div>
+
+            <div class="metric-card metric-speed-down">
+                <div class="metric-icon"><i class="fa-solid fa-hourglass-end"></i></div>
+                <div class="metric-info">
+                    <span class="metric-label">END TIME</span>
+                    <span class="metric-value font-sm" id="repEndTime">--</span>
+                    <span class="metric-sub" id="repTotalBytes">Bytes: 0 B</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts for Selected Session -->
+        <section class="charts-row">
+            <div class="cyber-panel chart-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-chart-pie"></i> Session Protocol Breakdown</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="reportProtocolChart"></canvas>
+                </div>
+            </div>
+
+            <div class="cyber-panel chart-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-chart-line"></i> Session Bandwidth History</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="reportBandwidthChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Talkers: Top Source & Destination IPs -->
+        <section class="charts-row">
+            <!-- Top Source IPs -->
+            <div class="cyber-panel half-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-arrow-right-from-bracket"></i> Top Source IP Addresses</h3>
+                    <span class="badge-tech">TOP TALKERS</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="cyber-table">
+                        <thead>
+                            <tr>
+                                <th>Source IP</th>
+                                <th>Packets</th>
+                                <th>Total Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topSourceIpsBody">
+                            <tr><td colspan="3" class="text-center">No source IP data recorded.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Destination IPs -->
+            <div class="cyber-panel half-panel">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-arrow-right-to-bracket"></i> Top Destination IP Addresses</h3>
+                    <span class="badge-tech">TOP ENDPOINTS</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="cyber-table">
+                        <thead>
+                            <tr>
+                                <th>Destination IP</th>
+                                <th>Packets</th>
+                                <th>Total Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topDestIpsBody">
+                            <tr><td colspan="3" class="text-center">No destination IP data recorded.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Empty State when no session is selected -->
+    <div id="noSessionSelected" class="cyber-panel text-center">
+        <div class="no-data py-5">
+            <i class="fa-solid fa-clipboard-list fa-3x mb-3 text-muted"></i>
+            <h4>No Session Selected</h4>
+            <p>Select a monitoring session from the dropdown above and click "Load Session Analytics" to view its cybersecurity audit report.</p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        if (typeof initReportsPage === "function") {
+            initReportsPage();
+        }
+    });
+</script>
+{% endblock %}

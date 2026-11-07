@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Top Action & Control Panel -->
+    <section class="cyber-panel control-panel">
+        <div class="panel-header">
+            <h3><i class="fa-solid fa-sliders"></i> Capture Controls &amp; Interface Configuration</h3>
+            <span class="badge-tech">SCAPY + PSUTIL CORE</span>
+        </div>
+        <div class="control-grid">
+            <div class="control-item">
+                <label for="interfaceSelect"><i class="fa-solid fa-ethernet"></i> Network Interface:</label>
+                <select id="interfaceSelect" class="cyber-select">
+                    <option value="Default">Detecting interfaces...</option>
+                </select>
+            </div>
+
+            <div class="control-item toggle-item">
+                <label class="switch-label" title="Generates realistic test packets if Npcap or admin rights are unavailable">
+                    <input type="checkbox" id="simulationModeToggle">
+                    <span class="slider-round"></span>
+                    <span class="label-text"><i class="fa-solid fa-flask"></i> Demonstration Mode</span>
+                </label>
+            </div>
+
+            <div class="control-actions">
+                <button id="btnStart" class="cyber-btn btn-start">
+                    <i class="fa-solid fa-play"></i> START MONITORING
+                </button>
+                <button id="btnStop" class="cyber-btn btn-stop" disabled>
+                    <i class="fa-solid fa-stop"></i> STOP MONITORING
+                </button>
+                <button id="btnClear" class="cyber-btn btn-clear" title="Clear all packet history and database records">
+                    <i class="fa-solid fa-trash-can"></i> Clear History
+                </button>
+                <a href="/api/export/csv" id="btnExport" class="cyber-btn btn-export" download>
+                    <i class="fa-solid fa-file-csv"></i> Export CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Dynamic System Banner for Npcap / Permission notices -->
+        <div id="systemNotice" class="system-notice hidden">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="systemNoticeText"></span>
+        </div>
+    </section>
+
+    <!-- Top Metrics: Packet & Bandwidth Cards -->
+    <section class="metrics-grid">
+        <!-- Total Packets Card -->
+        <div class="metric-card metric-primary">
+            <div class="metric-icon"><i class="fa-solid fa-cubes-stacked"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">TOTAL PACKETS</span>
+                <span class="metric-value" id="statTotalPackets">0</span>
+                <span class="metric-sub" id="statPacketRate">0 pkts/sec</span>
+            </div>
+        </div>
+
+        <!-- TCP Packets Card -->
+        <div class="metric-card metric-tcp">
+            <div class="metric-icon"><i class="fa-solid fa-network-wired"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">TCP PACKETS</span>
+                <span class="metric-value" id="statTcpPackets">0</span>
+                <span class="metric-sub" id="statTcpPercent">0% of total</span>
+            </div>
+        </div>
+
+        <!-- UDP Packets Card -->
+        <div class="metric-card metric-udp">
+            <div class="metric-icon"><i class="fa-solid fa-bolt"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">UDP PACKETS</span>
+                <span class="metric-value" id="statUdpPackets">0</span>
+                <span class="metric-sub" id="statUdpPercent">0% of total</span>
+            </div>
+        </div>
+
+        <!-- ICMP / Ping Packets Card -->
+        <div class="metric-card metric-icmp">
+            <div class="metric-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">ICMP PACKETS</span>
+                <span class="metric-value" id="statIcmpPackets">0</span>
+                <span class="metric-sub">Echo / Control</span>
+            </div>
+        </div>
+
+        <!-- Upload Speed Card -->
+        <div class="metric-card metric-speed-up">
+            <div class="metric-icon"><i class="fa-solid fa-arrow-up-long"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">UPLOAD SPEED</span>
+                <span class="metric-value" id="statUploadSpeed">0.00 KB/s</span>
+                <span class="metric-sub" id="statTotalSent">Sent: 0 B</span>
+            </div>
+        </div>
+
+        <!-- Download Speed Card -->
+        <div class="metric-card metric-speed-down">
+            <div class="metric-icon"><i class="fa-solid fa-arrow-down-long"></i></div>
+            <div class="metric-info">
+                <span class="metric-label">DOWNLOAD SPEED</span>
+                <span class="metric-value" id="statDownloadSpeed">0.00 KB/s</span>
+                <span class="metric-sub" id="statTotalRecv">Recv: 0 B</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visual Analytics & Charts Section -->
+    <section class="charts-row">
+        <!-- Live Bandwidth Line Graph -->
+        <div class="cyber-panel chart-panel line-chart-panel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-wave-square"></i> Real-Time Bandwidth Activity</h3>
+                <span class="live-tag"><span class="pulse-dot"></span> LIVE KB/S</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="trafficLineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Protocol Distribution Doughnut Graph -->
+        <div class="cyber-panel chart-panel donut-chart-panel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-chart-pie"></i> Protocol Distribution</h3>
+                <span class="badge-tech">PERCENTAGE</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="protocolDoughnutChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Secondary Charts & Protocol Breakdown Bar -->
+    <section class="charts-row">
+        <div class="cyber-panel chart-panel full-width-chart">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-chart-column"></i> Packet Volume by Protocol</h3>
+                <span class="badge-tech">HISTOGRAM</span>
+            </div>
+            <div class="chart-wrapper-bar">
+                <canvas id="protocolBarChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Recent Packets Feed Table -->
+    <section class="cyber-panel table-panel">
+        <div class="panel-header">
+            <div class="header-left">
+                <h3><i class="fa-solid fa-stream"></i> Live Packet Stream (Recent 50 Captured)</h3>
+                <span class="badge-count" id="livePacketCount">0 Packets</span>
+            </div>
+            <div class="header-right">
+                <label class="auto-scroll-label">
+                    <input type="checkbox" id="autoScrollToggle" checked> Auto-Scroll
+                </label>
+                <a href="{{ url_for('packets_view') }}" class="cyber-btn btn-sm btn-link">
+                    <i class="fa-solid fa-filter"></i> Advanced Search &amp; Filter <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="table-responsive" id="tableContainer">
+            <table class="cyber-table" id="livePacketsTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Src Port</th>
+                        <th>Dst Port</th>
+                        <th>Protocol</th>
+                        <th>Size</th>
+                        <th>Summary Info</th>
+                    </tr>
+                </thead>
+                <tbody id="livePacketsBody">
+                    <tr class="empty-row">
+                        <td colspan="8">
+                            <div class="no-data">
+                                <i class="fa-solid fa-radar fa-spin-pulse"></i>
+                                <p>Packet capture is currently idle. Click "START MONITORING" to capture live network traffic.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
