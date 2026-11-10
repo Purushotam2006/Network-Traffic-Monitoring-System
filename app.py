@@ -23,6 +23,25 @@ from packet_monitor import monitor_instance
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "cybersecurity-network-monitor-key-2026"
 
+# Count the app's own HTTP traffic (used when psutil can't see real NICs, e.g. on Render)
+@app.before_request
+def _count_request_bytes():
+    network_stats.add_http_bytes(
+        recv=len(request.method) + len(request.full_path)
+        + sum(len(k) + len(v) + 4 for k, v in request.headers)
+        + (request.content_length or 0)
+    )
+
+
+@app.after_request
+def _count_response_bytes(response):
+    network_stats.add_http_bytes(
+        sent=(response.content_length or 0)
+        + sum(len(k) + len(v) + 4 for k, v in response.headers)
+    )
+    return response
+
+
 # Bandwidth tracker instance for system I/O speed measurement
 bandwidth_tracker = network_stats.BandwidthTracker(history_size=30)
 

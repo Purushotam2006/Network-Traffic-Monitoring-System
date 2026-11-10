@@ -19,6 +19,42 @@ except ImportError:
     psutil = None
 
 
+# ---- Application-level HTTP counters (fallback when psutil sees no real NIC) ----
+_http_lock = threading.Lock()
+_http_bytes_sent = 0
+_http_bytes_recv = 0
+
+
+def add_http_bytes(sent=0, recv=0):
+    """Called from Flask hooks to count request/response bytes."""
+    global _http_bytes_sent, _http_bytes_recv
+    with _http_lock:
+        _http_bytes_sent += int(sent)
+        _http_bytes_recv += int(recv)
+
+
+def _read_http_counters():
+    with _http_lock:
+        return _http_bytes_sent, _http_bytes_recv
+
+
+def _psutil_unreliable():
+    """True on cloud containers (e.g. Render) where psutil sees only loopback/empty counters."""
+    if psutil is None:
+        return True
+    try:
+        total = 0
+        found_real_nic = False
+        for name, c in psutil.net_io_counters(pernic=True).items():
+            if name.lower().startswith(("lo", "loopback")):
+                continue
+            found_real_nic = True
+            total += c.bytes_sent + c.bytes_recv
+        return (not found_real_nic) or total < 1000000
+    except Exception:
+        return True
+
+
 def format_bytes(num_bytes):
     """
     Converts a raw byte count into human-readable representation:
@@ -147,21 +183,33 @@ class BandwidthTracker:
         # [{ 'time': '12:05:01', 'upload': 15.2, 'download': 42.1 }, ...]
         self.history = collections.deque(maxlen=history_size)
 
+        self.source = "psutil"
+
         # Baseline initialization
         self._initialize_counters()
 
     def _initialize_counters(self):
         """Captures initial baseline byte counters."""
-        if psutil is not None:
-            try:
-                io = psutil.net_io_counters()
-                self.last_bytes_sent = io.bytes_sent
-                self.last_bytes_recv = io.bytes_recv
-                self.total_sent = io.bytes_sent
-                self.total_recv = io.bytes_recv
-            except Exception:
-                pass
+        self.source = "http" if _psutil_unreliable() else "psutil"
+        try:
+            sent, recv = self._read_counters()
+            self.last_bytes_sent = sent
+            self.last_bytes_recv = recv
+            self.total_sent = sent
+            self.total_recv = recv
+        except Exception:
+            pass
         self.last_check_time = time.time()
+
+    def _read_counters(self, per_nic_name=None):
+        """Returns (bytes_sent, bytes_recv) from the active source."""
+        if self.source == "http":
+            return _read_http_counters()
+        if per_nic_name and per_nic_name in psutil.net_io_counters(pernic=True):
+            io = psutil.net_io_counters(pernic=True)[per_nic_name]
+        else:
+            io = psutil.net_io_counters(pernic=False)
+        return io.bytes_sent, io.bytes_recv
 
     def update(self, per_nic_name=None):
         """
@@ -179,17 +227,10 @@ class BandwidthTracker:
             curr_sent = self.last_bytes_sent
             curr_recv = self.last_bytes_recv
 
-            if psutil is not None:
-                try:
-                    if per_nic_name and per_nic_name in psutil.net_io_counters(pernic=True):
-                        io = psutil.net_io_counters(pernic=True)[per_nic_name]
-                    else:
-                        io = psutil.net_io_counters(pernic=False)
-
-                    curr_sent = io.bytes_sent
-                    curr_recv = io.bytes_recv
-                except Exception:
-                    pass
+            try:
+                curr_sent, curr_recv = self._read_counters(per_nic_name)
+            except Exception:
+                pass
 
             delta_sent = max(0, curr_sent - self.last_bytes_sent)
             delta_recv = max(0, curr_recv - self.last_bytes_recv)
